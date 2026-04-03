@@ -6,12 +6,13 @@ from demos.civilization.ai import choose_action
 from demos.civilization.config import BUILDINGS, DEFAULT_MAP_SIZE, DEFAULT_MAX_TURNS, TECH_COSTS
 from demos.civilization.engine import CivilizationGame
 from demos.civilization.models import Action
-from demos.civilization.render import render_dashboard, render_summary
+from demos.civilization.render import render_compact_status, render_dashboard, render_summary
 from demos.civilization.rules import (
     apply_action,
     can_build_building,
     can_research,
     legal_city_locations,
+    score,
 )
 from shared.cli_app import auto_pause, build_parser
 from shared.cursor_input import select_grid, select_menu
@@ -29,13 +30,29 @@ def _message_screen(game: CivilizationGame, lines: list[str]) -> None:
     select_menu(render_dashboard(game.state, footer=lines), ["Continue"])
 
 
+def _compact_header(game: CivilizationGame, extra: list[str] | None = None) -> str:
+    extra = extra or []
+    return "\n".join([render_compact_status(game.state), *extra])
+
+
+def _ultra_compact_header(game: CivilizationGame, extra: list[str] | None = None) -> str:
+    extra = extra or []
+    state = game.state
+    return "\n".join(
+        [
+            f"T{state.turn}/{state.max_turns} S{state.resources['science']} Score {score(state)}",
+            *extra,
+        ]
+    )
+
+
 def prompt_action(game: CivilizationGame) -> Action | None:
     state = game.state
     menu = ["Build city", "Build building", "Research tech", "Skip"]
     choice = select_menu(
-        render_dashboard(
-            state,
-            footer=[
+        _compact_header(
+            game,
+            [
                 "Choose an action.",
                 "Build city: select a legal tile on the map.",
                 "Build building/research: only legal options are listed.",
@@ -51,9 +68,9 @@ def prompt_action(game: CivilizationGame) -> Action | None:
             _message_screen(game, ["No legal city locations are currently available."])
             return Action(kind="skip")
         coord = select_grid(
-            title=render_dashboard(
-                state,
-                footer=[
+            title=_compact_header(
+                game,
+                [
                     "Build city: choose a legal tile.",
                     "Selectable tiles are legal city locations.",
                 ],
@@ -61,11 +78,11 @@ def prompt_action(game: CivilizationGame) -> Action | None:
             width=state.width,
             height=state.height,
             renderer=lambda x, y: next(
-                (f"🏙️{city.city_id}" for city in state.cities.values() if (city.x, city.y) == (x, y)),
+                ("🏠" for city in state.cities.values() if (city.x, city.y) == (x, y)),
                 {"P": "🌾", "F": "🌲", "M": "⛰️", "R": "🌊", "X": "🪨"}[state.terrain[y][x]],
             ),
             selectable=lambda x, y: (x, y) in legal,
-            footer_lines=["Only bracket-highlightable tiles can be selected."],
+            footer_lines=["Use arrows to move onto a legal tile, then press Enter.", "Tiles in parentheses are illegal for city building."],
         )
         return None if coord is None else Action(kind="build_city", coord=coord)
     if choice == 1:
@@ -80,9 +97,9 @@ def prompt_action(game: CivilizationGame) -> Action | None:
             return Action(kind="skip")
         options = [f"City {city_id}: {building}" for city_id, building in legal_options]
         index = select_menu(
-            render_dashboard(
-                state,
-                footer=["Build building: choose one legal city/building combination."],
+            _compact_header(
+                game,
+                ["Build building: choose one legal city/building combination."],
             ),
             options,
         )
@@ -96,9 +113,9 @@ def prompt_action(game: CivilizationGame) -> Action | None:
             _message_screen(game, ["No technologies can currently be researched."])
             return Action(kind="skip")
         index = select_menu(
-            render_dashboard(
-                state,
-                footer=["Research: choose one legal technology."],
+            _ultra_compact_header(
+                game,
+                ["Research: choose one legal technology."],
             ),
             tech_names,
         )

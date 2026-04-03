@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from demos.bomberman.models import GameState
-from shared.text_render import render_grid
 
 
 TILE = {
@@ -27,7 +26,12 @@ def render_board(state: GameState) -> str:
         rows[bomb.y][bomb.x] = f"💣{bomb.timer}"
     for player in state.players.values():
         rows[player.y][player.x] = TILE["p1"] if player.player_id == "P1" and player.alive else TILE["p2"] if player.alive else TILE["dead"]
-    return render_grid(rows)
+    header = "    " + "".join(f" {i:>2} " for i in range(state.width))
+    lines = [header]
+    for y, row in enumerate(rows):
+        padded = [f" {cell} " if cell != TILE["empty"] else " . " for cell in row]
+        lines.append(f"{y:>2} |" + "|".join(padded) + "|")
+    return "\n".join(lines)
 
 
 def render_summary(state: GameState) -> str:
@@ -38,4 +42,14 @@ def render_summary(state: GameState) -> str:
     if state.log:
         lines.append("Events:")
         lines.extend(state.log)
+    return "\n".join(lines)
+
+
+def render_compact_status(state: GameState) -> str:
+    lines = [f"Round {state.round_index}/{state.max_rounds}  Monsters {len(state.monsters)}  Bombs {[(b.x, b.y, b.timer) for b in state.bombs]}"]
+    for player in state.players.values():
+        icon = TILE["p1"] if player.player_id == "P1" else TILE["p2"]
+        lines.append(f"{icon} {player.player_id} ({player.x},{player.y}) alive={player.alive} last={player.last_action}")
+    if state.log:
+        lines.append(f"Latest: {state.log[-1]}")
     return "\n".join(lines)

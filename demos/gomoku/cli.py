@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 
 from demos.gomoku.ai import choose_move
+from demos.gomoku.board import BLACK, EMPTY, WHITE
 from demos.gomoku.config import DEFAULT_BOARD_SIZE, DEFAULT_WIN_LENGTH
 from demos.gomoku.engine import GomokuGame
 from demos.gomoku.render import render_board
@@ -21,15 +22,18 @@ def run_manual(game: GomokuGame) -> None:
     print("Manual mode: you are Black (●), AI is White (○).")
     while not game.state.is_terminal:
         print(render_board(game.state.board, game.state.last_move))
-        print(f"Move {game.state.move_count + 1}, current player: {game.state.current_player}")
+        current = "●" if game.state.current_player == "B" else "○"
+        print(f"Move {game.state.move_count + 1}, current player: {current}")
         if game.state.current_player == "B":
             move = select_grid(
                 title="Select your move",
                 width=game.state.board.size,
                 height=game.state.board.size,
-                renderer=lambda x, y: game.state.board.get(x, y),
+                renderer=lambda x, y: {EMPTY: ".", BLACK: "●", WHITE: "○"}[game.state.board.get(x, y)],
                 selectable=lambda x, y: 0 <= x < game.state.board.size and 0 <= y < game.state.board.size and game.state.board.get(x, y) == ".",
                 footer_lines=["Empty cells are selectable."],
+                decorate_unselectable=False,
+                selected_style="reverse",
             )
             if move is None:
                 print("Game cancelled.")
@@ -50,12 +54,13 @@ def run_auto(game: GomokuGame, delay: float) -> None:
     while not game.state.is_terminal:
         print(render_board(game.state.board, game.state.last_move))
         move = choose_move(game.state.board, game.state.current_player, game.win_length)
-        print(f"Auto move {game.state.move_count + 1}: {game.state.current_player} -> {move}")
+        current = "●" if game.state.current_player == "B" else "○"
+        print(f"Auto move {game.state.move_count + 1}: {current} -> {move}")
         game.apply_move(*move)
         auto_pause(delay)
     print(render_board(game.state.board, game.state.last_move))
     if game.state.winner:
-        print(f"Winner: {game.state.winner}")
+        print(f"Winner: {'●' if game.state.winner == 'B' else '○'}")
     else:
         print("Draw.")
 

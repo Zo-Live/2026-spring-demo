@@ -32,9 +32,11 @@ def select_grid(
     selectable: Callable[[int, int], bool],
     initial: tuple[int, int] = (0, 0),
     footer_lines: list[str] | None = None,
+    decorate_unselectable: bool = True,
+    selected_style: str = "brackets",
 ) -> tuple[int, int] | None:
     if _supports_curses():
-        return select_grid_curses(title, width, height, renderer, selectable, initial, footer_lines)
+        return select_grid_curses(title, width, height, renderer, selectable, initial, footer_lines, decorate_unselectable, selected_style)
     print(title)
     if footer_lines:
         for line in footer_lines:

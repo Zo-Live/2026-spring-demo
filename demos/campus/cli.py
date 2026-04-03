@@ -4,7 +4,8 @@ import argparse
 
 from demos.campus.config import BUILDINGS
 from demos.campus.engine import CampusGame
-from demos.campus.render import PLACE_EMOJI, render_dashboard, render_summary
+from demos.campus.render import PLACE_EMOJI, render_compact_dashboard, render_dashboard, render_summary
+from demos.campus.rules import distance_hours
 from demos.campus.scheduler import choose_commands
 from shared.cli_app import auto_pause, build_parser
 from shared.cursor_input import select_menu
@@ -20,13 +21,20 @@ def _message_screen(game: CampusGame, lines: list[str]) -> None:
 
 
 def prompt_student_command(game: CampusGame, student_name: str) -> str | None:
+    student = next(student for student in game.state.students if student.name == student_name)
+    travel_hint = "  ".join(
+        f"{PLACE_EMOJI[name]} {name}:{distance_hours(student.location, name, 'fatigue' in student.debuffs)}h"
+        for name in BUILDINGS
+    )
     options = ["⏸️ wait", *[f"{PLACE_EMOJI[name]} {name}" for name in BUILDINGS]]
     choice = select_menu(
-        render_dashboard(
+        render_compact_dashboard(
             game.state,
+            current_student=student_name,
             footer=[
                 f"{student_name}: choose a destination or wait.",
                 "Selecting a place means: start moving there now, or perform that place's default action if already there.",
+                f"Travel from current location: {travel_hint}",
             ],
         ),
         options,

@@ -5,7 +5,7 @@ import argparse
 from demos.bomberman.ai import choose_action
 from demos.bomberman.config import DEFAULT_SIZE, MAX_ROUNDS
 from demos.bomberman.engine import BombermanGame
-from demos.bomberman.render import TILE, render_board, render_summary
+from demos.bomberman.render import TILE, render_board, render_compact_status, render_summary
 from demos.bomberman.rules import is_legal_action
 from shared.cli_app import auto_pause, build_parser
 from shared.cursor_input import select_grid, select_menu
@@ -27,6 +27,11 @@ def _dashboard(game: BombermanGame, footer: list[str] | None = None) -> str:
     return "\n".join(parts)
 
 
+def _compact_header(game: BombermanGame, footer: list[str] | None = None) -> str:
+    footer = footer or []
+    return "\n".join([render_compact_status(game.state), *footer])
+
+
 def _message_screen(game: BombermanGame, lines: list[str]) -> None:
     select_menu(_dashboard(game, lines), ["Continue"])
 
@@ -34,7 +39,7 @@ def _message_screen(game: BombermanGame, lines: list[str]) -> None:
 def prompt_player_action(game: BombermanGame) -> str | None:
     player = game.state.players["P1"]
     coord = select_grid(
-        title=_dashboard(
+        title=_compact_header(
             game,
             [
                 "Select an adjacent tile to move.",
@@ -60,6 +65,7 @@ def prompt_player_action(game: BombermanGame) -> str | None:
         ),
         initial=(player.x, player.y),
         footer_lines=["Selectable cells are your current tile and four adjacent tiles."],
+        decorate_unselectable=False,
     )
     if coord is None:
         return None
@@ -69,7 +75,7 @@ def prompt_player_action(game: BombermanGame) -> str | None:
         if is_legal_action(game.state, "P1", "bomb"):
             options.insert(0, "Place bomb")
             actions.insert(0, "bomb")
-        index = select_menu(_dashboard(game, ["Current tile selected.", "Choose bomb or wait."]), options)
+        index = select_menu(_compact_header(game, ["Current tile selected.", "Choose bomb or wait."]), options)
         if index is None:
             return None
         return actions[index]
