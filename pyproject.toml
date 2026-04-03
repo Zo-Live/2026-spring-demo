@@ -1,0 +1,12 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "course-design-demos"
+version = "0.1.0"
+description = "Stage-one comparable CLI demos for four course design topics."
+requires-python = ">=3.11"
+
+[tool.setuptools]
+packages = ["demos", "demos.civilization", "demos.gomoku", "demos.bomberman", "demos.campus", "shared"]
