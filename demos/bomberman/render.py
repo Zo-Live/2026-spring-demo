@@ -40,7 +40,7 @@ def render_board(state: GameState) -> str:
         rows[bomb.y][bomb.x] = f"{TILE['bomb']}{bomb.timer}"
     for player in state.players.values():
         rows[player.y][player.x] = TILE["p1"] if player.player_id == "P1" and player.alive else TILE["p2"] if player.alive else TILE["dead"]
-    header = "    " + "".join(f" {i:>2} " for i in range(state.width))
+    header = "    " + " ".join(_pad_cell(str(i), 4) for i in range(state.width))
     lines = [header]
     for y, row in enumerate(rows):
         padded = [_pad_cell(cell, 4) for cell in row]
