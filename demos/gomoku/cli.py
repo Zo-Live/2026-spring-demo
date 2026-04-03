@@ -18,7 +18,7 @@ def build_cli_parser() -> argparse.ArgumentParser:
 
 
 def run_manual(game: GomokuGame) -> None:
-    print("Manual mode: you are Black (B), AI is White (W).")
+    print("Manual mode: you are Black (●), AI is White (○).")
     while not game.state.is_terminal:
         print(render_board(game.state.board, game.state.last_move))
         print(f"Move {game.state.move_count + 1}, current player: {game.state.current_player}")

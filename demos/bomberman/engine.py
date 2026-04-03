@@ -49,7 +49,7 @@ class BombermanGame:
     def _move_monsters(self) -> None:
         new_positions: set[tuple[int, int]] = set()
         for monster in sorted(self.state.monsters):
-            candidates = [monster]
+            candidates: list[tuple[int, int]] = []
             for dx, dy in DIRECTIONS.values():
                 nx, ny = monster[0] + dx, monster[1] + dy
                 if not in_bounds(self.state, nx, ny):
@@ -57,7 +57,7 @@ class BombermanGame:
                 if is_blocked(self.state, nx, ny):
                     continue
                 candidates.append((nx, ny))
-            choice = self.rng.choice(candidates)
+            choice = self.rng.choice(candidates) if candidates else monster
             new_positions.add(choice)
         self.state.monsters = new_positions
         for player in self.state.players.values():

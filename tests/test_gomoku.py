@@ -29,6 +29,15 @@ class GomokuTests(unittest.TestCase):
         move = choose_move(board, WHITE, 5)
         self.assertEqual(move, (4, 0))
 
+    def test_ai_blocks_open_three_before_four(self) -> None:
+        board = Board.create(9)
+        board.place(3, 4, BLACK)
+        board.place(4, 4, BLACK)
+        board.place(5, 4, BLACK)
+        board.place(4, 5, WHITE)
+        move = choose_move(board, WHITE, 5)
+        self.assertIn(move, {(2, 4), (6, 4)})
+
     def test_auto_game_terminates(self) -> None:
         game = GomokuGame(size=5, win_length=4)
         while not game.state.is_terminal:

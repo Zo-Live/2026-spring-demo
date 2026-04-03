@@ -24,9 +24,10 @@ def select_menu_curses(title: str, options: list[str], initial_index: int = 0) -
     def _inner(stdscr: curses.window) -> int | None:
         curses.curs_set(0)
         index = max(0, min(initial_index, len(options) - 1))
+        title_lines = title.splitlines() or [title]
         while True:
-            lines = [title, "", *[f" {option}" for option in options], "", "Use arrows, Enter to confirm, q to cancel."]
-            _draw_lines(stdscr, lines, index + 2)
+            lines = [*title_lines, "", *[f" {option}" for option in options], "", "Use arrows, Enter to confirm, q to cancel."]
+            _draw_lines(stdscr, lines, index + len(title_lines) + 1)
             key = stdscr.getch()
             if key in (curses.KEY_UP, ord("k")):
                 index = (index - 1) % len(options)
@@ -53,6 +54,7 @@ def select_grid_curses(
 
     def _inner(stdscr: curses.window) -> tuple[int, int] | None:
         curses.curs_set(0)
+        title_lines = title.splitlines() or [title]
         x, y = initial
         while not selectable(x, y):
             x = (x + 1) % width
@@ -63,8 +65,10 @@ def select_grid_curses(
 
         while True:
             stdscr.clear()
-            stdscr.addstr(0, 0, title)
-            stdscr.addstr(1, 0, "Use arrows, Enter to confirm, q to cancel.")
+            for index, line in enumerate(title_lines):
+                stdscr.addstr(index, 0, line)
+            stdscr.addstr(len(title_lines), 0, "Use arrows, Enter to confirm, q to cancel.")
+            grid_start = len(title_lines) + 2
             for row in range(height):
                 parts: list[str] = []
                 for col in range(width):
@@ -75,9 +79,9 @@ def select_grid_curses(
                         parts.append(f" {cell} ")
                     else:
                         parts.append(f"({cell})")
-                stdscr.addstr(3 + row, 0, " ".join(parts))
+                stdscr.addstr(grid_start + row, 0, " ".join(parts))
             for offset, line in enumerate(footer_lines):
-                stdscr.addstr(4 + height + offset, 0, line)
+                stdscr.addstr(grid_start + height + 1 + offset, 0, line)
             stdscr.refresh()
             key = stdscr.getch()
             if key in (curses.KEY_LEFT, ord("h")):
