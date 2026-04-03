@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import unicodedata
+
 from demos.bomberman.models import GameState
 
 
@@ -11,7 +13,19 @@ TILE = {
     "p2": "🤖",
     "dead": "💀",
     "empty": "·",
+    "bomb": "💣",
 }
+
+
+def _cell_width(text: str) -> int:
+    return sum(2 if unicodedata.east_asian_width(ch) in "FWW" else 1 for ch in text)
+
+
+def _pad_cell(text: str, width: int) -> str:
+    w = _cell_width(text)
+    if w >= width:
+        return text
+    return text + " " * (width - w)
 
 
 def render_board(state: GameState) -> str:
@@ -23,14 +37,14 @@ def render_board(state: GameState) -> str:
     for x, y in state.monsters:
         rows[y][x] = TILE["monster"]
     for bomb in state.bombs:
-        rows[bomb.y][bomb.x] = f"💣{bomb.timer}"
+        rows[bomb.y][bomb.x] = f"{TILE['bomb']}{bomb.timer}"
     for player in state.players.values():
         rows[player.y][player.x] = TILE["p1"] if player.player_id == "P1" and player.alive else TILE["p2"] if player.alive else TILE["dead"]
     header = "    " + "".join(f" {i:>2} " for i in range(state.width))
     lines = [header]
     for y, row in enumerate(rows):
-        padded = [f" {cell} " if cell != TILE["empty"] else " . " for cell in row]
-        lines.append(f"{y:>2} |" + "|".join(padded) + "|")
+        padded = [_pad_cell(cell, 4) for cell in row]
+        lines.append(f"{y:>2}  " + " ".join(padded))
     return "\n".join(lines)
 
 

@@ -5,7 +5,7 @@ import argparse
 from demos.bomberman.ai import choose_action
 from demos.bomberman.config import DEFAULT_SIZE, MAX_ROUNDS
 from demos.bomberman.engine import BombermanGame
-from demos.bomberman.render import TILE, render_board, render_compact_status, render_summary
+from demos.bomberman.render import TILE, _pad_cell, render_board, render_compact_status, render_summary
 from demos.bomberman.rules import is_legal_action
 from shared.cli_app import auto_pause, build_parser
 from shared.cursor_input import select_grid, select_menu
@@ -48,15 +48,18 @@ def prompt_player_action(game: BombermanGame) -> str | None:
         ),
         width=game.state.width,
         height=game.state.height,
-        renderer=lambda x, y: (
-            TILE["p1"]
-            if (x, y) == (player.x, player.y)
-            else TILE["p2"]
-            if (x, y) == (game.state.players["P2"].x, game.state.players["P2"].y)
-            else next(
-                (f"💣{bomb.timer}" for bomb in game.state.bombs if (bomb.x, bomb.y) == (x, y)),
-                TILE["monster"] if (x, y) in game.state.monsters else TILE["wall"] if (x, y) in game.state.walls else TILE["box"] if (x, y) in game.state.boxes else TILE["empty"],
-            )
+        renderer=lambda x, y: _pad_cell(
+            (
+                TILE["p1"]
+                if (x, y) == (player.x, player.y)
+                else TILE["p2"]
+                if (x, y) == (game.state.players["P2"].x, game.state.players["P2"].y)
+                else next(
+                    (f"{TILE['bomb']}{bomb.timer}" for bomb in game.state.bombs if (bomb.x, bomb.y) == (x, y)),
+                    TILE["monster"] if (x, y) in game.state.monsters else TILE["wall"] if (x, y) in game.state.walls else TILE["box"] if (x, y) in game.state.boxes else TILE["empty"],
+                )
+            ),
+            3,
         ),
         selectable=lambda x, y: (x, y) == (player.x, player.y)
         or any(
